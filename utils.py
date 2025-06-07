@@ -7,11 +7,6 @@ import torch
 import librosa
 import numpy as np
 from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
-import sys
-
-if sys.version_info >= (3, 13):
-    import audioop_lts as audioop
-    sys.modules['audioop'] = audioop
 
 # Load model and processor
 MODEL_NAME = "ylacombe/accent-classifier"

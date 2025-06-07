@@ -2,7 +2,7 @@ streamlit
 torch
 torchaudio
 transformers
-pydub
+pydub==0.24.1
 requests
 ffmpeg-python
 scikit-learn
@@ -10,5 +10,4 @@ numpy
 yt-dlp
 sounddevice
 pyaudio==0.2.11
-audioop-lts
 librosa
