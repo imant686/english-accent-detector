@@ -8,4 +8,4 @@ ffmpeg-python
 scikit-learn
 numpy
 yt-dlp
-pyaudio
+sounddevice
