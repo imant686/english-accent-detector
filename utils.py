@@ -4,7 +4,7 @@ import requests
 import yt_dlp
 from pydub import AudioSegment
 import torch
-import librosa
+import torchaudio
 import numpy as np
 from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
 
@@ -60,10 +60,20 @@ def extract_audio(video_path):
     raise Exception("Audio decoding failed after trying multiple formats:\n" + "\n".join(errors))
 
 def classify_accent(audio_path):
-    # Load and preprocess audio
-    waveform, sr = librosa.load(audio_path, sr=16000)
-    if len(waveform.shape) > 1:
-        waveform = librosa.to_mono(waveform)
+    # Load and preprocess audio using torchaudio instead
+    waveform, sr = torchaudio.load(audio_path)
+
+    # Resample if needed
+    if sr != 16000:
+        resampler = torchaudio.transforms.Resample(sr, 16000)
+        waveform = resampler(waveform)
+
+    # Convert to mono if stereo
+    if waveform.shape[0] > 1:
+        waveform = torch.mean(waveform, dim=0, keepdim=True)
+
+    # Flatten to 1D
+    waveform = waveform.squeeze().numpy()
 
     inputs = extractor(waveform, sampling_rate=16000, return_tensors="pt")
 

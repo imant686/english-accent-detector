@@ -10,4 +10,3 @@ numpy
 yt-dlp
 sounddevice
 pyaudio==0.2.11
-librosa
