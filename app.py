@@ -4,7 +4,7 @@ from utils import process_video_and_detect_accent
 st.set_page_config(page_title="English Accent Detector", layout="centered")
 
 st.title("🎙️ English Accent Detector")
-st.markdown("Provide a public video URL (e.g., Loom or direct .mp4) to analyse the speaker’s accent.")
+st.markdown("Provide a public video URL (e.g., Youtube URL or direct .mp4) to analyse the speaker’s accent.")
 
 video_url = st.text_input("Video URL")
 
