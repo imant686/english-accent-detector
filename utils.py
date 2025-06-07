@@ -7,6 +7,11 @@ import torch
 import librosa
 import numpy as np
 from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
+import sys
+
+if sys.version_info >= (3, 13):
+    import audioop_lts as audioop
+    sys.modules['audioop'] = audioop
 
 # Load model and processor
 MODEL_NAME = "ylacombe/accent-classifier"
@@ -26,7 +31,6 @@ def download_video(url):
             'noplaylist': True,
             'default_search': 'auto'
         }
-
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             print("Using yt_dlp to download the video with format 18...")
             ydl.download([url])
@@ -36,7 +40,6 @@ def download_video(url):
         if response.status_code != 200:
             print(f"Failed HTTP GET request with status code: {response.status_code}")
             raise Exception("Failed to download video.")
-
         with open(tmp_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
@@ -48,6 +51,7 @@ def extract_audio(video_path):
     audio_path = os.path.splitext(video_path)[0] + ".wav"
     tried_formats = ["m4a", "webm", "mp4", None]  # None = auto-detect
     errors = []
+
     for fmt in tried_formats:
         try:
             audio = AudioSegment.from_file(video_path, format=fmt)
@@ -57,14 +61,15 @@ def extract_audio(video_path):
         except Exception as e:
             errors.append(f"Format {fmt}: {str(e)}")
             continue
+
     raise Exception("Audio decoding failed after trying multiple formats:\n" + "\n".join(errors))
 
 def classify_accent(audio_path):
     # Load and preprocess audio
     waveform, sr = librosa.load(audio_path, sr=16000)
-
     if len(waveform.shape) > 1:
         waveform = librosa.to_mono(waveform)
+
     inputs = extractor(waveform, sampling_rate=16000, return_tensors="pt")
 
     with torch.no_grad():
@@ -75,7 +80,9 @@ def classify_accent(audio_path):
 
     print("Predicted index:", pred_idx)
     print("id2label keys:", id2label.keys())
+
     accent_label = id2label.get(str(pred_idx)) or id2label.get(pred_idx) or f"Unknown accent ({pred_idx})"
+
     return {
         "accent": accent_label,
         "confidence": round(confidence * 100, 2),
@@ -86,10 +93,13 @@ def process_video_and_detect_accent(url):
     try:
         video_path = download_video(url)
         print("Video downloaded to:", video_path)
+
         audio_path = extract_audio(video_path)
         print("Audio extracted to:", audio_path)
+
         result = classify_accent(audio_path)
         print("Classification result:", result)
+
     except Exception as e:
         import traceback
         print("Error occurred during processing:")
@@ -100,4 +110,5 @@ def process_video_and_detect_accent(url):
             os.remove(video_path)
         if 'audio_path' in locals() and os.path.exists(audio_path):
             os.remove(audio_path)
+
     return result
